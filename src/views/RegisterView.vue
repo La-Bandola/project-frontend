@@ -59,21 +59,21 @@
 </template>
 
 <script setup>
-import { reactive, ref } from 'vue'
+import { reactive } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth.js'
+import { useAuthSubmission } from '@/composables/useAuthSubmission.js'
 
 const auth   = useAuthStore()
 const router = useRouter()
-const error  = ref(null)
 const form   = reactive({ username: '', email: '', password: '', nickname: '' })
+const { error, submit } = useAuthSubmission({
+  onSubmit: () => auth.register(form),
+  fallbackError: 'Error al registrarse',
+})
 
 const handleRegister = async () => {
-  try {
-    await auth.register(form)
-    router.push('/')
-  } catch {
-    error.value = 'Error al registrarse'
-  }
+  const ok = await submit()
+  if (ok) router.push('/')
 }
 </script>
