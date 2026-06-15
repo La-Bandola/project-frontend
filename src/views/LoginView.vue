@@ -42,21 +42,21 @@
 </template>
 
 <script setup>
-import { reactive, ref } from 'vue'
+import { reactive } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth.js'
+import { useAuthSubmission } from '@/composables/useAuthSubmission.js'
 
 const auth   = useAuthStore()
 const router = useRouter()
-const error  = ref(null)
 const form   = reactive({ username: '', password: '' })
+const { error, submit } = useAuthSubmission({
+  onSubmit: () => auth.login(form.username, form.password),
+  fallbackError: 'Credenciales incorrectas',
+})
 
 const handleLogin = async () => {
-  try {
-    await auth.login(form.username, form.password)
-    router.push('/')
-  } catch {
-    error.value = 'Credenciales incorrectas'
-  }
+  const ok = await submit()
+  if (ok) router.push('/')
 }
 </script>
