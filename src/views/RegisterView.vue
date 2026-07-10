@@ -61,19 +61,21 @@
 <script setup>
 import { reactive } from 'vue'
 import { useRouter } from 'vue-router'
-import { useAuthStore } from '@/stores/auth.js'
-import { useAuthSubmission } from '@/composables/useAuthSubmission.js'
 
-const auth   = useAuthStore()
+import { useAuthSubmission } from '@/composables/useAuthSubmission.js'
+import { useAuthStore } from '@/stores/auth.js'
+import { AUTH_ERROR_MESSAGES } from '@/utils/authErrors.js'
+
+const auth = useAuthStore()
 const router = useRouter()
-const form   = reactive({ username: '', email: '', password: '', nickname: '' })
+const form = reactive({ username: '', email: '', password: '', nickname: '' })
 const { error, submit } = useAuthSubmission({
   onSubmit: () => auth.register(form),
-  fallbackError: 'Error al registrarse',
+  fallbackError: AUTH_ERROR_MESSAGES.registrationFailed,
 })
 
 const handleRegister = async () => {
-  const ok = await submit()
-  if (ok) router.push('/')
+  const isSuccessful = await submit()
+  if (isSuccessful) router.push('/')
 }
 </script>
