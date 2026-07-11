@@ -18,6 +18,50 @@
 
     <div class="max-w-2xl mx-auto px-4 py-8 space-y-8">
 
+      <!-- ── Deudas pendientes globales ──────────────────────────── -->
+      <div>
+        <h2 class="text-lg font-semibold text-gray-800 mb-3">
+          💸 Mis deudas pendientes
+        </h2>
+
+        <!-- Resumen total si hay deudas -->
+        <div
+          v-if="deudas.length > 0"
+          class="bg-red-50 border border-red-200 rounded-xl px-5 py-3 mb-3 flex justify-between items-center"
+        >
+          <span class="text-sm text-red-700">Total pendiente</span>
+          <strong class="text-red-700 text-base">
+            ${{ totalDeudas.toLocaleString('es-CO') }}
+          </strong>
+        </div>
+
+        <div class="space-y-2">
+          <router-link
+            v-for="deuda in deudas"
+            :key="deuda.participant_id"
+            :to="`/parches/${deuda.parche_id}`"
+            class="block bg-white rounded-xl shadow-sm px-5 py-4 hover:shadow-md transition"
+          >
+            <div class="flex justify-between items-start">
+              <div>
+                <p class="font-medium text-gray-800">{{ deuda.evento_nombre }}</p>
+                <p class="text-xs text-gray-400 mt-0.5">
+                  📍 {{ deuda.parche_nombre }}
+                  <span v-if="deuda.responsable"> · Para: {{ deuda.responsable }}</span>
+                </p>
+              </div>
+              <span class="text-red-500 font-semibold text-sm whitespace-nowrap ml-4">
+                ${{ Number(deuda.monto_adeudado).toLocaleString('es-CO') }}
+              </span>
+            </div>
+          </router-link>
+
+          <p v-if="deudas.length === 0" class="text-green-600 text-sm text-center bg-green-50 rounded-xl px-5 py-4">
+            ✅ ¡Estás al día! No tienes deudas pendientes.
+          </p>
+        </div>
+      </div>
+
       <!-- Mis parches -->
       <div>
         <h2 class="text-lg font-semibold text-gray-800 mb-3">Mis parches</h2>
@@ -86,20 +130,39 @@
 </template>
 
 <script setup>
-import { reactive, ref, onMounted } from 'vue'
+import { reactive, ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth.js'
 import { useParchesStore } from '@/stores/parches.js'
+import api from '@/services/api.js'
 
 const auth    = useAuthStore()
 const parches = useParchesStore()
 const router  = useRouter()
 const error   = ref(null)
+const deudas  = ref([])
 
 const form             = reactive({ name: '', description: '' })
 const codigoInvitacion = ref('')
 
-onMounted(() => parches.fetchParches())
+// Suma total de todas las deudas pendientes
+const totalDeudas = computed(() =>
+  deudas.value.reduce((acc, d) => acc + Number(d.monto_adeudado), 0)
+)
+
+onMounted(async () => {
+  await parches.fetchParches()
+  await fetchDeudas()
+})
+
+const fetchDeudas = async () => {
+  try {
+    const { data } = await api.get('/deudas-pendientes/')
+    deudas.value = data
+  } catch (e) {
+    console.error('Error cargando deudas pendientes:', e.response?.data)
+  }
+}
 
 const handleCrear = async () => {
   try {
@@ -121,4 +184,4 @@ const handleUnirse = async () => {
     error.value = 'Código inválido o ya eres miembro'
   }
 }
-</script>
+</script>
