@@ -143,6 +143,87 @@
         </p>
       </div>
 
+      <!-- ── Suscripciones ───────────────────────────────────────── -->
+      <div class="space-y-4">
+        <h2 class="text-lg font-semibold text-gray-800">Suscripciones</h2>
+
+        <!-- Lista de suscripciones existentes -->
+        <div
+          v-for="sus in suscripciones"
+          :key="sus.id"
+          class="bg-white rounded-xl shadow-sm p-5 flex justify-between items-start"
+        >
+          <div>
+            <p class="font-semibold text-gray-800">{{ sus.name }}</p>
+            <p class="text-sm text-gray-500">
+              ${{ sus.amount }} · Corte: {{ formatFecha(sus.cutoff_date) }}
+            </p>
+            <p class="text-xs text-gray-400 mt-1">
+              Responsable: {{ sus.responsible?.username || '—' }}
+            </p>
+          </div>
+          <button
+            @click="handleEliminarSuscripcion(sus.id)"
+            class="text-xs text-red-400 hover:text-red-600 hover:underline transition"
+          >
+            Eliminar
+          </button>
+        </div>
+
+        <p v-if="suscripciones.length === 0" class="text-gray-400 text-sm text-center">
+          No hay suscripciones aún
+        </p>
+
+        <!-- Formulario nueva suscripción -->
+        <div class="bg-white rounded-xl shadow-sm p-5">
+          <h3 class="text-base font-semibold text-gray-800 mb-3">Nueva suscripción</h3>
+          <form @submit.prevent="handleCrearSuscripcion" class="space-y-3">
+            <input
+              v-model="susForm.name"
+              placeholder="Nombre (ej: Netflix, Spotify)"
+              required
+              class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-400"
+            />
+            <input
+              v-model="susForm.amount"
+              placeholder="Monto mensual"
+              type="number"
+              min="0"
+              required
+              class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-400"
+            />
+            <div>
+              <label class="block text-xs text-gray-500 mb-1">Fecha de corte (día de pago)</label>
+              <input
+                v-model="susForm.cutoff_date"
+                type="date"
+                required
+                class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-400"
+              />
+            </div>
+            <select
+              v-model="susForm.responsible_id"
+              class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-400"
+            >
+              <option value="">Sin responsable</option>
+              <option
+                v-for="miembro in miembros"
+                :key="miembro.id"
+                :value="miembro.id"
+              >
+                {{ miembro.username }}
+              </option>
+            </select>
+            <button
+              type="submit"
+              class="w-full bg-purple-600 text-white py-2 rounded-lg hover:bg-purple-700 transition font-medium"
+            >
+              Agregar suscripción
+            </button>
+          </form>
+        </div>
+      </div>
+
       <p v-if="error" class="text-red-500 text-sm text-center">{{ error }}</p>
     </div>
   </div>
@@ -162,16 +243,25 @@ import api from '@/services/api.js'
 const route   = useRoute()
 const parches = useParchesStore()
 const auth    = useAuthStore()
-const parche  = ref(null)
-const eventos = ref([])
-const miembros = ref([])
-const error   = ref(null)
-const balance = ref({ pagado: 0, recibido: 0, deudas: 0, neto: 0 })
+const parche        = ref(null)
+const eventos       = ref([])
+const miembros      = ref([])
+const suscripciones = ref([])
+const error         = ref(null)
+const balance       = ref({ pagado: 0, recibido: 0, deudas: 0, neto: 0 })
 
 const eventoForm = reactive({
-  name:         '',
-  total_amount: '',
-  split_type:   'equal',
+  name:           '',
+  total_amount:   '',
+  split_type:     'equal',
+  responsible_id: '',   // fix: declarado aquí para que Vue lo rastree con v-model
+})
+
+const susForm = reactive({
+  name:           '',
+  amount:         '',
+  cutoff_date:    '',
+  responsible_id: '',
 })
 
 onMounted(async () => {
@@ -181,6 +271,7 @@ onMounted(async () => {
   await fetchEventos()
   await fetchBalance()
   await fetchMiembros()
+  await fetchSuscripciones()
 })
 
 const fetchEventos = async () => {
@@ -202,13 +293,55 @@ const fetchBalance = async () => {
 
 const fetchMiembros = async () => {
   try {
-    const { data } = await api.get(
-      `/parches/${route.params.id}/members/`
-    )
-
+    const { data } = await api.get(`/parches/${route.params.id}/members/`)
     miembros.value = data
   } catch (e) {
     console.error('error cargando miembros:', e.response?.data)
+  }
+}
+
+const fetchSuscripciones = async () => {
+  try {
+    const { data } = await api.get(`/parches/${route.params.id}/suscripciones/`)
+    suscripciones.value = data
+  } catch (e) {
+    console.error('error cargando suscripciones:', e.response?.data)
+  }
+}
+
+// Formatea 'YYYY-MM-DD' a 'DD/MM/YYYY' para mostrar en la UI
+const formatFecha = (fecha) => {
+  if (!fecha) return '—'
+  const [y, m, d] = fecha.split('-')
+  return `${d}/${m}/${y}`
+}
+
+const handleCrearSuscripcion = async () => {
+  try {
+    await api.post(`/parches/${route.params.id}/suscripciones/`, {
+      name:           susForm.name,
+      amount:         susForm.amount,
+      cutoff_date:    susForm.cutoff_date,
+      responsible_id: susForm.responsible_id || null,
+    })
+    susForm.name           = ''
+    susForm.amount         = ''
+    susForm.cutoff_date    = ''
+    susForm.responsible_id = ''
+    error.value            = null
+    await fetchSuscripciones()
+  } catch {
+    error.value = 'Error al crear la suscripción'
+  }
+}
+
+const handleEliminarSuscripcion = async (id) => {
+  try {
+    await api.delete(`/parches/${route.params.id}/suscripciones/${id}/`)
+    error.value = null
+    await fetchSuscripciones()
+  } catch {
+    error.value = 'Error al eliminar la suscripción'
   }
 }
 
@@ -221,9 +354,10 @@ const handleCrearEvento = async () => {
       responsible_id:  eventoForm.responsible_id || null,
       participant_ids: [auth.user.id],
     })
-    eventoForm.name         = ''
-    eventoForm.total_amount = ''
-    error.value             = null
+    eventoForm.name           = ''
+    eventoForm.total_amount   = ''
+    eventoForm.responsible_id = ''
+    error.value               = null
     await fetchEventos()
     await fetchBalance()
   } catch {
