@@ -1,4 +1,16 @@
-services:
+# =============================================================================
+# ⚠️  ARCHIVO DEPRECADO — No usar este docker-compose directamente.
+#
+# Este archivo tiene rutas incorrectas (./backend, ./frontend) que no
+# corresponden a la estructura real del proyecto.
+#
+# Para desarrollo normal del proyecto, usa el docker-compose.yml de la raíz:
+#
+#   cd ../..      (sube a la carpeta Parcheck/)
+#   docker-compose up --build
+# =============================================================================
+
+
   db:
     image: postgres:16-alpine
     volumes:
