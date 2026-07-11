@@ -17,7 +17,7 @@ When responding to frontend requests, always evaluate and apply the following st
 - **Separation of Concerns (Thin Components):** UI components should only handle presentation. Extract stateful business logic into decoupled `composables` (e.g., `useUser()`) and pure functions into utility files.
 - **Single Responsibility Principle (SRP):** Components and functions should do exactly one thing. Break down large, monolithic components into smaller, reusable pieces.
 - **TypeScript & Safety:** Use strict typing for props, emits, and reactive state. Avoid the `any` type at all costs. Define clear `Interfaces` or `Types`.
-- **Naming Conventions:** Use PascalCase for components (`UserProfile.vue`), camelCase for composables/functions, and descriptive, intention-revealing names for variables. Avoid abbreviations.
+- **Naming Conventions:** Use PascalCase for components (`UserProfile.vue`), camelCase for composables/functions, and descriptive, intention-revealing names for variables. Avoid abbreviations. Variable names should be in English only. 
 - **Magic Values:** Do not use magic strings or numbers directly in the template or script; extract them to named constants.
 
 ### 2. Testing Strategies (Jest)
@@ -31,7 +31,7 @@ When responding to frontend requests, always evaluate and apply the following st
 
 At the end of every response, you must provide a concise quality checklist using ✅ (Green/Pass) or ❌ (Red/Fail or Needs Attention) evaluating the provided solution against these core requirements:
 
-- ✅/❌ **Clean Code & SRP:** Functions and components are small, readable, and have a single responsibility.
+- ✅/❌ **Clean Code & SRP:** Functions and components are small, readable, and have a single responsibility, Variables are well-named, have clear purposes and are in English only.
 - ✅/❌ **Architecture (Composables):** Business logic is decoupled from the UI and extracted into composables or utility functions.
 - ✅/❌ **TypeScript/Typing:** Interfaces and types are explicitly defined, strictly avoiding `any` and implicit typings.
 - ✅/❌ **Testing & Mocks:** Jest best practices are followed, logic is testable, and dependencies are properly mocked.
