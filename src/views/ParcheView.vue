@@ -224,6 +224,102 @@
         </div>
       </div>
 
+      <!-- ── Finanzas ──────────────────────────────────────────────── -->
+      <div class="space-y-4">
+        <h2 class="text-lg font-semibold text-gray-800">💰 Finanzas del parche</h2>
+
+        <!-- Balance mutuo: quién le debe a quién -->
+        <div class="bg-white rounded-xl shadow-sm p-5">
+          <h3 class="text-base font-semibold text-gray-700 mb-3">Balance con cada miembro</h3>
+          <div v-if="Object.keys(balanceMutuo).length > 0" class="space-y-2">
+            <div
+              v-for="(monto, usuario) in balanceMutuo"
+              :key="usuario"
+              class="flex justify-between items-center px-4 py-2 rounded-lg"
+              :class="monto >= 0 ? 'bg-green-50' : 'bg-red-50'"
+            >
+              <span class="text-sm text-gray-700">{{ usuario }}</span>
+              <span
+                class="text-sm font-semibold"
+                :class="monto >= 0 ? 'text-green-600' : 'text-red-500'"
+              >
+                {{ monto >= 0 ? '+' : '' }}${{ Number(monto).toLocaleString('es-CO') }}
+              </span>
+            </div>
+          </div>
+          <p v-else class="text-sm text-gray-400 text-center">Sin movimientos entre miembros aún</p>
+        </div>
+
+        <!-- Historial de transacciones -->
+        <div class="bg-white rounded-xl shadow-sm p-5">
+          <h3 class="text-base font-semibold text-gray-700 mb-3">Historial de transacciones</h3>
+          <div class="space-y-2 max-h-64 overflow-y-auto">
+            <div
+              v-for="tx in transacciones"
+              :key="tx.id"
+              class="flex justify-between items-start bg-gray-50 rounded-lg px-4 py-3"
+            >
+              <div>
+                <p class="text-sm font-medium text-gray-800">
+                  {{ tx.from_user?.username }} → {{ tx.to_user?.username }}
+                </p>
+                <p class="text-xs text-gray-500">{{ tx.concept || '(sin concepto)' }}</p>
+                <p class="text-xs text-gray-400">{{ formatFecha(tx.created_at?.split('T')[0]) }}</p>
+              </div>
+              <span
+                class="text-sm font-semibold whitespace-nowrap ml-4"
+                :class="tx.type === 'pago' ? 'text-green-600' : 'text-red-500'"
+              >
+                ${{ Number(tx.amount).toLocaleString('es-CO') }}
+              </span>
+            </div>
+            <p v-if="transacciones.length === 0" class="text-sm text-gray-400 text-center">
+              No hay transacciones registradas
+            </p>
+          </div>
+        </div>
+
+        <!-- Registrar pago manual -->
+        <div class="bg-white rounded-xl shadow-sm p-5">
+          <h3 class="text-base font-semibold text-gray-700 mb-3">Registrar pago manual</h3>
+          <form @submit.prevent="handleCrearTransaccion" class="space-y-3">
+            <select
+              v-model="txForm.to_user_id"
+              required
+              class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-400"
+            >
+              <option value="">Selecciona a quién le pagas</option>
+              <option
+                v-for="m in miembros.filter(m => m.id !== auth.user?.id)"
+                :key="m.id"
+                :value="m.id"
+              >
+                {{ m.username }}
+              </option>
+            </select>
+            <input
+              v-model="txForm.amount"
+              type="number"
+              min="0"
+              placeholder="Monto"
+              required
+              class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-400"
+            />
+            <input
+              v-model="txForm.concept"
+              placeholder="Concepto (opcional)"
+              class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-400"
+            />
+            <button
+              type="submit"
+              class="w-full bg-emerald-600 text-white py-2 rounded-lg hover:bg-emerald-700 transition font-medium"
+            >
+              Registrar pago
+            </button>
+          </form>
+        </div>
+      </div>
+
       <p v-if="error" class="text-red-500 text-sm text-center">{{ error }}</p>
     </div>
   </div>
@@ -246,9 +342,11 @@ const auth    = useAuthStore()
 const parche        = ref(null)
 const eventos       = ref([])
 const miembros      = ref([])
-const suscripciones = ref([])
-const error         = ref(null)
-const balance       = ref({ pagado: 0, recibido: 0, deudas: 0, neto: 0 })
+const suscripciones  = ref([])
+const transacciones  = ref([])
+const balanceMutuo   = ref({})
+const error          = ref(null)
+const balance        = ref({ pagado: 0, recibido: 0, deudas: 0, neto: 0 })
 
 const eventoForm = reactive({
   name:           '',
@@ -264,6 +362,13 @@ const susForm = reactive({
   responsible_id: '',
 })
 
+const txForm = reactive({
+  to_user_id: '',
+  amount:     '',
+  concept:    '',
+  type:       'pago',
+})
+
 onMounted(async () => {
   await auth.fetchProfile()
   parche.value = await parches.fetchParche(route.params.id)
@@ -272,6 +377,8 @@ onMounted(async () => {
   await fetchBalance()
   await fetchMiembros()
   await fetchSuscripciones()
+  await fetchTransacciones()
+  await fetchBalanceMutuo()
 })
 
 const fetchEventos = async () => {
@@ -306,6 +413,44 @@ const fetchSuscripciones = async () => {
     suscripciones.value = data
   } catch (e) {
     console.error('error cargando suscripciones:', e.response?.data)
+  }
+}
+
+const fetchTransacciones = async () => {
+  try {
+    const { data } = await api.get(`/parches/${route.params.id}/transacciones/`)
+    transacciones.value = data
+  } catch (e) {
+    console.error('error cargando transacciones:', e.response?.data)
+  }
+}
+
+const fetchBalanceMutuo = async () => {
+  try {
+    const { data } = await api.get(`/parches/${route.params.id}/balance/mutuo/`)
+    balanceMutuo.value = data
+  } catch (e) {
+    console.error('error cargando balance mutuo:', e.response?.data)
+  }
+}
+
+const handleCrearTransaccion = async () => {
+  try {
+    await api.post(`/parches/${route.params.id}/transacciones/`, {
+      to_user_id: txForm.to_user_id,
+      amount:     txForm.amount,
+      concept:    txForm.concept,
+      type:       'pago',
+    })
+    txForm.to_user_id = ''
+    txForm.amount     = ''
+    txForm.concept    = ''
+    error.value       = null
+    await fetchTransacciones()
+    await fetchBalanceMutuo()
+    await fetchBalance()
+  } catch {
+    error.value = 'Error al registrar el pago'
   }
 }
 

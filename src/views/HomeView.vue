@@ -18,6 +18,40 @@
 
     <div class="max-w-2xl mx-auto px-4 py-8 space-y-8">
 
+      <!-- ── Boletín financiero global ─────────────────────────── -->
+      <div v-if="boletin" class="bg-white rounded-xl shadow-sm p-5">
+        <h2 class="text-lg font-semibold text-gray-800 mb-4">📊 Mi resumen financiero</h2>
+        <div class="grid grid-cols-3 gap-3">
+          <div class="bg-green-50 rounded-lg p-3 text-center">
+            <p class="text-xs text-gray-500 mb-1">Total pagado</p>
+            <p class="text-base font-bold text-green-600">
+              ${{ Number(boletin.total_pagado).toLocaleString('es-CO') }}
+            </p>
+          </div>
+          <div class="bg-blue-50 rounded-lg p-3 text-center">
+            <p class="text-xs text-gray-500 mb-1">Total recibido</p>
+            <p class="text-base font-bold text-blue-600">
+              ${{ Number(boletin.total_recibido).toLocaleString('es-CO') }}
+            </p>
+          </div>
+          <div
+            class="rounded-lg p-3 text-center"
+            :class="boletin.saldo_neto >= 0 ? 'bg-emerald-50' : 'bg-red-50'"
+          >
+            <p class="text-xs text-gray-500 mb-1">Saldo neto</p>
+            <p
+              class="text-base font-bold"
+              :class="boletin.saldo_neto >= 0 ? 'text-emerald-600' : 'text-red-500'"
+            >
+              {{ boletin.saldo_neto >= 0 ? '+' : '' }}${{ Number(boletin.saldo_neto).toLocaleString('es-CO') }}
+            </p>
+          </div>
+        </div>
+        <p class="text-xs text-gray-400 text-center mt-3">
+          En {{ boletin.num_parches }} parche{{ boletin.num_parches !== 1 ? 's' : '' }}
+        </p>
+      </div>
+
       <!-- ── Deudas pendientes globales ──────────────────────────── -->
       <div>
         <h2 class="text-lg font-semibold text-gray-800 mb-3">
@@ -141,6 +175,7 @@ const parches = useParchesStore()
 const router  = useRouter()
 const error   = ref(null)
 const deudas  = ref([])
+const boletin = ref(null)
 
 const form             = reactive({ name: '', description: '' })
 const codigoInvitacion = ref('')
@@ -153,7 +188,17 @@ const totalDeudas = computed(() =>
 onMounted(async () => {
   await parches.fetchParches()
   await fetchDeudas()
+  await fetchBoletin()
 })
+
+const fetchBoletin = async () => {
+  try {
+    const { data } = await api.get('/finanzas/boletin/')
+    boletin.value = data
+  } catch (e) {
+    console.error('Error cargando boletin:', e.response?.data)
+  }
+}
 
 const fetchDeudas = async () => {
   try {
