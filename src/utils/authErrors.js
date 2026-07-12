@@ -19,5 +19,19 @@ export const getAuthErrorMessage = (fallbackMessage, error) => {
     return AUTH_ERROR_MESSAGES.invalidCredentials;
   }
 
+  if (error?.response?.status === 400 && error.response.data) {
+    const data = error.response.data;
+    const keys = Object.keys(data);
+    if (keys.length > 0) {
+      const firstError = data[keys[0]];
+      if (Array.isArray(firstError)) {
+        return firstError[0];
+      }
+      if (typeof firstError === 'string') {
+        return firstError;
+      }
+    }
+  }
+
   return fallbackMessage;
 };
