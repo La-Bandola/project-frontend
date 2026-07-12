@@ -321,6 +321,137 @@
       </div>
 
       <p v-if="error" class="text-red-500 text-sm text-center">{{ error }}</p>
+
+      <!-- ── Ahorros ─────────────────────────────────────────────── -->
+      <div class="space-y-4">
+        <h2 class="text-lg font-semibold text-gray-800"> Ahorros colectivos</h2>
+
+        <!-- Espacios de ahorro existentes -->
+        <div
+          v-for="espacio in ahorros"
+          :key="espacio.id"
+          class="bg-white rounded-xl shadow-sm p-5"
+        >
+          <!-- Cabecera del espacio -->
+          <div class="flex justify-between items-start mb-3">
+            <div>
+              <p class="font-semibold text-gray-800">{{ espacio.name }}</p>
+              <p v-if="espacio.description" class="text-xs text-gray-400 mt-0.5">
+                {{ espacio.description }}
+              </p>
+            </div>
+            <button
+              @click="handleEliminarAhorro(espacio.id)"
+              class="text-xs text-red-400 hover:text-red-600 hover:underline transition"
+            >
+              Eliminar
+            </button>
+          </div>
+
+          <!-- Barra de progreso -->
+          <div class="mb-3">
+            <div class="flex justify-between text-xs text-gray-500 mb-1">
+              <span>${{ Number(espacio.current_amount).toLocaleString('es-CO') }} ahorrado</span>
+              <span>Meta: ${{ Number(espacio.goal_amount).toLocaleString('es-CO') }}</span>
+            </div>
+            <div class="w-full bg-gray-100 rounded-full h-2.5">
+              <div
+                class="bg-indigo-500 h-2.5 rounded-full transition-all"
+                :style="{ width: Math.min(espacio.progress_percentage, 100) + '%' }"
+              />
+            </div>
+            <p class="text-xs text-right text-indigo-600 mt-1 font-medium">
+              {{ espacio.progress_percentage }}%
+              <span v-if="espacio.target_date"> · Fecha: {{ formatFecha(espacio.target_date) }}</span>
+            </p>
+          </div>
+
+          <!-- Aportes recientes -->
+          <div v-if="espacio.aportes?.length > 0" class="space-y-1 mb-3">
+            <p class="text-xs font-medium text-gray-500">Aportes</p>
+            <div
+              v-for="aporte in espacio.aportes"
+              :key="aporte.id"
+              class="flex justify-between text-xs bg-gray-50 rounded px-3 py-1.5"
+            >
+              <span class="text-gray-700">{{ aporte.user?.username }}</span>
+              <span class="text-green-600 font-medium">
+                +${{ Number(aporte.amount).toLocaleString('es-CO') }}
+                <span v-if="aporte.note" class="text-gray-400 font-normal ml-1">· {{ aporte.note }}</span>
+              </span>
+            </div>
+          </div>
+
+          <!-- Formulario para aportar -->
+          <form @submit.prevent="handleAportar(espacio.id, $event)" class="flex gap-2 mt-2">
+            <input
+              :name="'monto-' + espacio.id"
+              type="number"
+              min="1"
+              placeholder="Monto a aportar"
+              required
+              class="flex-1 border border-gray-300 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400"
+            />
+            <input
+              :name="'nota-' + espacio.id"
+              type="text"
+              placeholder="Nota (opcional)"
+              class="flex-1 border border-gray-300 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400"
+            />
+            <button
+              type="submit"
+              class="bg-indigo-600 text-white px-3 py-1.5 rounded-lg text-sm hover:bg-indigo-700 transition"
+            >
+              Aportar
+            </button>
+          </form>
+        </div>
+
+        <p v-if="ahorros.length === 0" class="text-gray-400 text-sm text-center">
+          No hay espacios de ahorro aún
+        </p>
+
+        <!-- Formulario nuevo espacio de ahorro -->
+        <div class="bg-white rounded-xl shadow-sm p-5">
+          <h3 class="text-base font-semibold text-gray-700 mb-3">Crear espacio de ahorro</h3>
+          <form @submit.prevent="handleCrearAhorro" class="space-y-3">
+            <input
+              v-model="ahorroForm.name"
+              placeholder="Nombre (ej: Viaje a Cartagena)"
+              required
+              class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-400"
+            />
+            <input
+              v-model="ahorroForm.description"
+              placeholder="Descripción (opcional)"
+              class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-400"
+            />
+            <input
+              v-model="ahorroForm.goal_amount"
+              type="number"
+              min="1"
+              placeholder="Meta de ahorro ($)"
+              required
+              class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-400"
+            />
+            <div>
+              <label class="block text-xs text-gray-500 mb-1">Fecha objetivo (opcional)</label>
+              <input
+                v-model="ahorroForm.target_date"
+                type="date"
+                class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-400"
+              />
+            </div>
+            <button
+              type="submit"
+              class="w-full bg-indigo-600 text-white py-2 rounded-lg hover:bg-indigo-700 transition font-medium"
+            >
+              Crear espacio
+            </button>
+          </form>
+        </div>
+      </div>
+
     </div>
   </div>
 
@@ -345,6 +476,7 @@ const miembros      = ref([])
 const suscripciones  = ref([])
 const transacciones  = ref([])
 const balanceMutuo   = ref({})
+const ahorros        = ref([])
 const error          = ref(null)
 const balance        = ref({ pagado: 0, recibido: 0, deudas: 0, neto: 0 })
 
@@ -369,6 +501,13 @@ const txForm = reactive({
   type:       'pago',
 })
 
+const ahorroForm = reactive({
+  name:        '',
+  description: '',
+  goal_amount: '',
+  target_date: '',
+})
+
 onMounted(async () => {
   await auth.fetchProfile()
   parche.value = await parches.fetchParche(route.params.id)
@@ -379,6 +518,7 @@ onMounted(async () => {
   await fetchSuscripciones()
   await fetchTransacciones()
   await fetchBalanceMutuo()
+  await fetchAhorros()
 })
 
 const fetchEventos = async () => {
@@ -517,6 +657,62 @@ const handlePagar = async (participanteId) => {
     await fetchBalance()
   } catch {
     error.value = 'Error al marcar el pago'
+  }
+}
+
+const fetchAhorros = async () => {
+  try {
+    const { data } = await api.get(`/parches/${route.params.id}/ahorros/`)
+    ahorros.value = data
+  } catch (e) {
+    console.error('error cargando ahorros:', e.response?.data)
+  }
+}
+
+const handleCrearAhorro = async () => {
+  try {
+    await api.post(`/parches/${route.params.id}/ahorros/`, {
+      name:        ahorroForm.name,
+      description: ahorroForm.description || '',
+      goal_amount: ahorroForm.goal_amount,
+      target_date: ahorroForm.target_date || null,
+    })
+    ahorroForm.name        = ''
+    ahorroForm.description = ''
+    ahorroForm.goal_amount = ''
+    ahorroForm.target_date = ''
+    error.value            = null
+    await fetchAhorros()
+  } catch {
+    error.value = 'Error al crear el espacio de ahorro'
+  }
+}
+
+const handleEliminarAhorro = async (id) => {
+  try {
+    await api.delete(`/parches/${route.params.id}/ahorros/${id}/`)
+    error.value = null
+    await fetchAhorros()
+  } catch {
+    error.value = 'Error al eliminar el espacio de ahorro'
+  }
+}
+
+const handleAportar = async (espacioId, event) => {
+  const form  = event.target
+  const monto = form[`monto-${espacioId}`].value
+  const nota  = form[`nota-${espacioId}`].value
+  try {
+    await api.post(`/ahorros/${espacioId}/aportar/`, {
+      amount: monto,
+      note:   nota || '',
+    })
+    form[`monto-${espacioId}`].value = ''
+    form[`nota-${espacioId}`].value  = ''
+    error.value = null
+    await fetchAhorros()
+  } catch {
+    error.value = 'Error al registrar el aporte'
   }
 }
 </script>
