@@ -1,10 +1,10 @@
 <template>
   <div class="min-h-screen bg-surface" v-if="auth.user">
-    <!-- Navbar -->
-    <nav class="bg-white shadow-sm px-6 py-4 flex justify-between items-center">
-      <ParCheckLogo size="sm" to="/" />
-      <span class="text-sm text-gray-500">{{ parche?.members_count }} miembros</span>
-    </nav>
+    <AppNavbar />
+    <div class="bg-white border-b px-6 py-2 flex justify-between items-center text-sm text-gray-500">
+      <span class="font-medium text-gray-700">{{ parche?.name }}</span>
+      <span>👥 {{ parche?.members_count }} miembros</span>
+    </div>
 
     <div class="max-w-6xl mx-auto px-4 py-6 space-y-6">
 
@@ -539,7 +539,7 @@
 </template>
 
 <script setup>
-import ParCheckLogo from '@/components/ParCheckLogo.vue'
+import AppNavbar from '@/components/AppNavbar.vue'
 import { ref, reactive, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 import { useParchesStore } from '@/stores/parches.js'
