@@ -11,7 +11,22 @@
       <!-- Código invitación -->
       <div class="bg-brand-50 border border-brand-200 rounded-xl px-5 py-3 flex justify-between items-center">
         <span class="text-sm text-brand-700">Código de invitación</span>
-        <strong class="text-brand-900 tracking-widest">{{ parche?.invite_code }}</strong>
+        <div class="flex items-center gap-2">
+          <strong class="text-brand-900 tracking-widest">{{ parche?.invite_code }}</strong>
+          <button
+            type="button"
+            @click="copiarCodigo"
+            class="p-1.5 rounded-lg hover:bg-brand-100 transition-colors"
+            :title="copiado ? 'Copiado' : 'Copiar código'"
+          >
+            <svg v-if="!copiado" xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-brand-700" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+            </svg>
+            <svg v-else xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+            </svg>
+          </button>
+        </div>
       </div>
 
       <!-- Balance personal -->
@@ -510,6 +525,8 @@ const balanceMutuo   = ref({})
 const ahorros        = ref([])
 const error          = ref(null)
 const balance        = ref({ pagado: 0, recibido: 0, deudas: 0, neto: 0 })
+const copiado = ref(false)
+
 
 const eventoForm = reactive({
   name:           '',
@@ -773,6 +790,20 @@ const handleEliminarEvento = async (id) => {
     await fetchBalance()
   } catch {
     error.value = 'Error al eliminar el evento'
+  }
+}
+
+async function copiarCodigo() {
+  if (!parche.value?.invite_code) return
+
+  try {
+    await navigator.clipboard.writeText(parche.value.invite_code)
+    copiado.value = true
+    setTimeout(() => {
+      copiado.value = false
+    }, 2000)
+  } catch (err) {
+    console.error('Error al copiar el código:', err)
   }
 }
 </script>
