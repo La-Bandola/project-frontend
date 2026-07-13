@@ -15,7 +15,7 @@
               to="/historial"
               class="text-xs bg-gray-100 text-gray-600 px-3 py-1.5 rounded-lg hover:bg-gray-200 transition font-medium"
             >
-              Ver historial de pagos ↗
+              Ver historial de transacciones ↗
             </router-link>
           </div>
           <div class="grid grid-cols-3 gap-3">
