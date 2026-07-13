@@ -11,4 +11,4 @@ RUN npm install
 COPY . .
 
 # Documenta el puerto que expone el servidor de desarrollo de Vite
-EXPOSE 5173
+EXPOSE 5173

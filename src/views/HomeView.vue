@@ -1,10 +1,10 @@
 <template>
-  <div class="min-h-screen bg-gray-50">
+  <div class="min-h-screen bg-surface">
     <!-- Navbar -->
     <nav class="bg-white shadow-sm px-6 py-4 flex justify-between items-center">
-      <h1 class="text-xl font-bold text-indigo-600">ParCheck</h1>
+      <ParCheckLogo size="sm" to="/" />
       <div class="flex gap-4 items-center">
-        <router-link to="/perfil" class="text-sm text-gray-600 hover:text-indigo-600">
+        <router-link to="/perfil" class="text-sm text-gray-600 hover:text-brand-500">
           👤 {{ auth.user?.nickname || auth.user?.username }}
         </router-link>
         <button
@@ -28,9 +28,9 @@
               ${{ Number(boletin.total_pagado).toLocaleString('es-CO') }}
             </p>
           </div>
-          <div class="bg-blue-50 rounded-lg p-3 text-center">
+          <div class="bg-brand-50 rounded-lg p-3 text-center">
             <p class="text-xs text-gray-500 mb-1">Total recibido</p>
-            <p class="text-base font-bold text-blue-600">
+            <p class="text-base font-bold text-brand-500">
               ${{ Number(boletin.total_recibido).toLocaleString('es-CO') }}
             </p>
           </div>
@@ -81,7 +81,7 @@
                 <p class="font-medium text-gray-800">{{ deuda.evento_nombre }}</p>
                 <p class="text-xs text-gray-400 mt-0.5">
                   📍 {{ deuda.parche_nombre }}
-                  <span v-if="deuda.responsable"> · Para: {{ deuda.responsable }}</span>
+                  <span v-if="deuda.responsable">· Para: {{ deuda.responsable }}</span>
                 </p>
               </div>
               <span class="text-red-500 font-semibold text-sm whitespace-nowrap ml-4">
@@ -123,16 +123,16 @@
             v-model="form.name"
             placeholder="Nombre del parche"
             required
-            class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-400"
+            class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-brand-400"
           />
           <input
             v-model="form.description"
             placeholder="Descripción (opcional)"
-            class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-400"
+            class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-brand-400"
           />
           <button
             type="submit"
-            class="w-full bg-indigo-600 text-white py-2 rounded-lg hover:bg-indigo-700 transition font-medium"
+            class="w-full bg-brand-500 text-white py-2 rounded-lg hover:bg-brand-600 transition font-medium"
           >
             Crear
           </button>
@@ -147,11 +147,11 @@
             v-model="codigoInvitacion"
             placeholder="Código de invitación"
             required
-            class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-400"
+            class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-brand-400"
           />
           <button
             type="submit"
-            class="w-full bg-green-600 text-white py-2 rounded-lg hover:bg-green-700 transition font-medium"
+            class="w-full bg-gold-500 text-white py-2 rounded-lg hover:bg-gold-600 transition font-medium"
           >
             Unirse
           </button>
@@ -164,6 +164,7 @@
 </template>
 
 <script setup>
+import ParCheckLogo from '@/components/ParCheckLogo.vue'
 import { reactive, ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth.js'
@@ -229,4 +230,4 @@ const handleUnirse = async () => {
     error.value = 'Código inválido o ya eres miembro'
   }
 }
-</script>
+</script>

@@ -1,22 +1,15 @@
-# =============================================================================
-# ⚠️  ARCHIVO DEPRECADO — No usar este docker-compose directamente.
-#
-# Este archivo tiene rutas incorrectas (./backend, ./frontend) que no
-# corresponden a la estructura real del proyecto.
-#
-# Para desarrollo normal del proyecto, usa el docker-compose.yml de la raíz:
-#
-#   cd ../..      (sube a la carpeta Parcheck/)
-#   docker-compose up --build
-# =============================================================================
-
-
+services:
   db:
     image: postgres:16-alpine
+    restart: unless-stopped
     volumes:
       - postgres_data:/var/lib/postgresql/data
     env_file:
       - .env
+    environment:
+      POSTGRES_DB:       ${POSTGRES_DB}
+      POSTGRES_USER:     ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     ports:
       - "5433:5432"
     healthcheck:
@@ -26,10 +19,14 @@
       retries: 5
 
   backend:
-    build: ./backend
-    command: python manage.py runserver 0.0.0.0:8000
+    build: ./project-backend
+    restart: unless-stopped
+    command: >
+      sh -c "python manage.py migrate --no-input &&
+             python manage.py runserver 0.0.0.0:8000"
     volumes:
-      - ./backend:/app
+      - ./project-backend:/app
+      - media_data:/app/media
     ports:
       - "8000:8000"
     env_file:
@@ -37,12 +34,11 @@
     depends_on:
       db:
         condition: service_healthy
-
   frontend:
-    build: ./frontend
+    build: ./project-frontend
     command: npm run dev -- --host
     volumes:
-      - ./frontend:/app
+      - ./project-frontend:/app
       - /app/node_modules
     ports:
       - "5173:5173"
@@ -51,3 +47,4 @@
 
 volumes:
   postgres_data:
+  media_data:

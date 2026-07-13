@@ -1,18 +1,17 @@
 <template>
-  <div class="min-h-screen bg-gray-50" v-if="auth.user">
+  <div class="min-h-screen bg-surface" v-if="auth.user">
     <!-- Navbar -->
     <nav class="bg-white shadow-sm px-6 py-4 flex justify-between items-center">
-      <router-link to="/" class="text-indigo-600 font-medium hover:underline">← Volver</router-link>
-      <h1 class="text-xl font-bold text-indigo-600">{{ parche?.name }}</h1>
+      <ParCheckLogo size="sm" to="/" />
       <span class="text-sm text-gray-500">{{ parche?.members_count }} miembros</span>
     </nav>
 
     <div class="max-w-2xl mx-auto px-4 py-8 space-y-6">
 
       <!-- Código invitación -->
-      <div class="bg-indigo-50 border border-indigo-200 rounded-xl px-5 py-3 flex justify-between items-center">
-        <span class="text-sm text-indigo-700">Código de invitación</span>
-        <strong class="text-indigo-800 tracking-widest">{{ parche?.invite_code }}</strong>
+      <div class="bg-brand-50 border border-brand-200 rounded-xl px-5 py-3 flex justify-between items-center">
+        <span class="text-sm text-brand-700">Código de invitación</span>
+        <strong class="text-brand-900 tracking-widest">{{ parche?.invite_code }}</strong>
       </div>
 
       <!-- Balance personal -->
@@ -39,60 +38,83 @@
       </div>
 
       <!-- Crear evento -->
-      <div class="bg-white rounded-xl shadow-sm p-5">
-        <h2 class="text-lg font-semibold text-gray-800 mb-3">Crear evento</h2>
-        <form @submit.prevent="handleCrearEvento" class="space-y-3">
-          <input
-            v-model="eventoForm.name"
-            placeholder="Nombre del evento"
-            required
-            class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-400"
-          />
-          <input
-            v-model="eventoForm.total_amount"
-            placeholder="Monto total"
-            type="number"
-            required
-            class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-400"
-          />
-          <select
-            v-model="eventoForm.split_type"
-            class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-400"
-          >
-          <option disabled value="">
-          Seleccione un responsable
-          </option>
-          
-            <option value="equal">Partes iguales</option>
-            <option value="custom">Monto personalizado</option>
-          </select>
-          
-          <select 
-            v-model="eventoForm.responsible_id" required
-            class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-400"
-          >
-          <option disabled value="">
-          Seleccione un responsable
-          </option>
+<div class="bg-white rounded-xl shadow-sm p-5">
+  <h2 class="text-lg font-semibold text-gray-800 mb-3">Crear evento</h2>
+  <form @submit.prevent="handleCrearEvento" class="space-y-3">
+    <input
+      v-model="eventoForm.name"
+      placeholder="Nombre del evento"
+      required
+      class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-brand-400"
+    />
+    <input
+      v-model="eventoForm.total_amount"
+      placeholder="Monto total"
+      type="number"
+      required
+      class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-brand-400"
+    />
+    <select
+      v-model="eventoForm.split_type"
+      class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-brand-400"
+    >
+      <option disabled value="">Seleccione tipo de división</option>
+      <option value="equal">Partes iguales</option>
+      <option value="custom">Monto personalizado</option>
+    </select>
 
-          <option
-            v-for="miembro in miembros"
-            :key="miembro.id"
+    <select
+      v-model="eventoForm.responsible_id" required
+      class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-brand-400"
+    >
+      <option disabled value="">Seleccione un responsable</option>
+      <option
+        v-for="miembro in miembros"
+        :key="miembro.id"
+        :value="miembro.id"
+      >
+        {{ miembro.username }}
+      </option>
+    </select>
+
+    <!-- Participantes -->
+    <div>
+      <label class="block text-xs text-gray-500 mb-1">Participantes</label>
+      <div class="space-y-2 border border-gray-300 rounded-lg px-4 py-2">
+        <label
+          v-for="miembro in miembros"
+          :key="miembro.id"
+          class="flex items-center gap-2 text-sm text-gray-700 cursor-pointer"
+        >
+          <input
+            type="checkbox"
             :value="miembro.id"
-          >
-            {{ miembro.username }}
-          </option>
-        </select>
-
-          <button
-            type="submit"
-            class="w-full bg-indigo-600 text-white py-2 rounded-lg hover:bg-indigo-700 transition font-medium"
-          >
-
-            Crear evento
-          </button>
-        </form>
+            v-model="eventoForm.participant_ids"
+            class="accent-brand-500"
+          />
+          <span class="flex-1">{{ miembro.username }}</span>
+          <input
+          v-if="eventoForm.split_type === 'custom' && eventoForm.participant_ids.includes(miembro.id)"
+          :value="eventoForm.custom_amounts[miembro.id] || ''"
+          @input="eventoForm.custom_amounts[miembro.id] = $event.target.value"
+          type="number"
+          min="0"
+          placeholder="Monto"
+          class="w-28 border border-gray-300 rounded-lg px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-brand-400"
+        />
+                </label>
       </div>
+    </div>
+    <p v-if="error" class="text-red-500 text-sm">{{ error }}</p>
+
+    <button
+      type="submit"
+      class="w-full bg-brand-500 text-white py-2 rounded-lg hover:bg-brand-600 transition font-medium"
+    >
+      Crear evento
+    </button>
+  </form>
+</div>
 
       <!-- Lista de eventos -->
       <div class="space-y-4">
@@ -103,15 +125,23 @@
           :key="i"
           class="bg-white rounded-xl shadow-sm p-5"
         >
-          <div class="flex justify-between items-start mb-3">
-            <div>
-              <p class="font-semibold text-gray-800">{{ evento.name }}</p>
-              <p class="text-sm text-gray-500">Total: ${{ evento.total_amount }}</p>
-            </div>
-            <span class="text-xs bg-indigo-100 text-indigo-700 px-2 py-1 rounded-full">
-              {{ evento.participants?.length }} participantes
-            </span>
-          </div>
+<div class="flex justify-between items-start mb-3">
+  <div>
+    <p class="font-semibold text-gray-800">{{ evento.name }}</p>
+    <p class="text-sm text-gray-500">Total: ${{ evento.total_amount }}</p>
+  </div>
+  <div class="flex items-center gap-2">
+    <span class="text-xs bg-brand-100 text-brand-700 px-2 py-1 rounded-full">
+      {{ evento.participants?.length }} participantes
+    </span>
+    <button
+      @click="handleEliminarEvento(evento.id)"
+      class="text-xs text-red-400 hover:text-red-600 hover:underline transition"
+    >
+      Eliminar
+    </button>
+  </div>
+</div>
 
           <div class="space-y-2">
             <div
@@ -182,7 +212,7 @@
               v-model="susForm.name"
               placeholder="Nombre (ej: Netflix, Spotify)"
               required
-              class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-400"
+              class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-brand-400"
             />
             <input
               v-model="susForm.amount"
@@ -190,7 +220,7 @@
               type="number"
               min="0"
               required
-              class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-400"
+              class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-brand-400"
             />
             <div>
               <label class="block text-xs text-gray-500 mb-1">Fecha de corte (día de pago)</label>
@@ -198,12 +228,12 @@
                 v-model="susForm.cutoff_date"
                 type="date"
                 required
-                class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-400"
+                class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-brand-400"
               />
             </div>
             <select
               v-model="susForm.responsible_id"
-              class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-400"
+              class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-brand-400"
             >
               <option value="">Sin responsable</option>
               <option
@@ -216,7 +246,7 @@
             </select>
             <button
               type="submit"
-              class="w-full bg-purple-600 text-white py-2 rounded-lg hover:bg-purple-700 transition font-medium"
+              class="w-full bg-brand-500 text-white py-2 rounded-lg hover:bg-brand-600 transition font-medium"
             >
               Agregar suscripción
             </button>
@@ -286,7 +316,7 @@
             <select
               v-model="txForm.to_user_id"
               required
-              class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-400"
+              class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-brand-400"
             >
               <option value="">Selecciona a quién le pagas</option>
               <option
@@ -303,16 +333,16 @@
               min="0"
               placeholder="Monto"
               required
-              class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-400"
+              class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-brand-400"
             />
             <input
               v-model="txForm.concept"
               placeholder="Concepto (opcional)"
-              class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-400"
+              class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-brand-400"
             />
             <button
               type="submit"
-              class="w-full bg-emerald-600 text-white py-2 rounded-lg hover:bg-emerald-700 transition font-medium"
+              class="w-full bg-gold-500 text-white py-2 rounded-lg hover:bg-gold-600 transition font-medium"
             >
               Registrar pago
             </button>
@@ -356,11 +386,11 @@
             </div>
             <div class="w-full bg-gray-100 rounded-full h-2.5">
               <div
-                class="bg-indigo-500 h-2.5 rounded-full transition-all"
+                class="bg-brand-500 h-2.5 rounded-full transition-all"
                 :style="{ width: Math.min(espacio.progress_percentage, 100) + '%' }"
               />
             </div>
-            <p class="text-xs text-right text-indigo-600 mt-1 font-medium">
+            <p class="text-xs text-right text-brand-500 mt-1 font-medium">
               {{ espacio.progress_percentage }}%
               <span v-if="espacio.target_date"> · Fecha: {{ formatFecha(espacio.target_date) }}</span>
             </p>
@@ -390,17 +420,17 @@
               min="1"
               placeholder="Monto a aportar"
               required
-              class="flex-1 border border-gray-300 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400"
+              class="flex-1 border border-gray-300 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand-400"
             />
             <input
               :name="'nota-' + espacio.id"
               type="text"
               placeholder="Nota (opcional)"
-              class="flex-1 border border-gray-300 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400"
+              class="flex-1 border border-gray-300 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand-400"
             />
             <button
               type="submit"
-              class="bg-indigo-600 text-white px-3 py-1.5 rounded-lg text-sm hover:bg-indigo-700 transition"
+              class="bg-brand-500 text-white px-3 py-1.5 rounded-lg text-sm hover:bg-brand-600 transition"
             >
               Aportar
             </button>
@@ -419,12 +449,12 @@
               v-model="ahorroForm.name"
               placeholder="Nombre (ej: Viaje a Cartagena)"
               required
-              class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-400"
+              class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-brand-400"
             />
             <input
               v-model="ahorroForm.description"
               placeholder="Descripción (opcional)"
-              class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-400"
+              class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-brand-400"
             />
             <input
               v-model="ahorroForm.goal_amount"
@@ -432,19 +462,19 @@
               min="1"
               placeholder="Meta de ahorro ($)"
               required
-              class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-400"
+              class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-brand-400"
             />
             <div>
               <label class="block text-xs text-gray-500 mb-1">Fecha objetivo (opcional)</label>
               <input
                 v-model="ahorroForm.target_date"
                 type="date"
-                class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-400"
+                class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-brand-400"
               />
             </div>
             <button
               type="submit"
-              class="w-full bg-indigo-600 text-white py-2 rounded-lg hover:bg-indigo-700 transition font-medium"
+              class="w-full bg-brand-500 text-white py-2 rounded-lg hover:bg-brand-600 transition font-medium"
             >
               Crear espacio
             </button>
@@ -461,6 +491,7 @@
 </template>
 
 <script setup>
+import ParCheckLogo from '@/components/ParCheckLogo.vue'
 import { ref, reactive, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 import { useParchesStore } from '@/stores/parches.js'
@@ -484,7 +515,9 @@ const eventoForm = reactive({
   name:           '',
   total_amount:   '',
   split_type:     'equal',
-  responsible_id: '',   // fix: declarado aquí para que Vue lo rastree con v-model
+  responsible_id: '',
+  participant_ids: [], 
+  custom_amounts:   {},  // fix: declarado aquí para que Vue lo rastree con v-model
 })
 
 const susForm = reactive({
@@ -632,21 +665,37 @@ const handleEliminarSuscripcion = async (id) => {
 
 const handleCrearEvento = async () => {
   try {
-    await api.post(`/parches/${route.params.id}/eventos/`, {
+
+    const payload = {
       name:            eventoForm.name,
       total_amount:    eventoForm.total_amount,
       split_type:      eventoForm.split_type,
       responsible_id:  eventoForm.responsible_id || null,
-      participant_ids: [auth.user.id],
-    })
-    eventoForm.name           = ''
-    eventoForm.total_amount   = ''
-    eventoForm.responsible_id = ''
-    error.value               = null
+      participant_ids: eventoForm.participant_ids.length > 0
+                       ? eventoForm.participant_ids
+                       : [auth.user.id],
+    }
+
+    if (eventoForm.split_type === 'custom') {
+      payload.custom_amounts = eventoForm.custom_amounts
+    }
+
+    await api.post(`/parches/${route.params.id}/eventos/`, payload)
+
+    eventoForm.name            = ''
+    eventoForm.total_amount    = ''
+    eventoForm.responsible_id  = ''
+    eventoForm.participant_ids = []
+    eventoForm.custom_amounts   = {}
+    error.value                = null
     await fetchEventos()
     await fetchBalance()
-  } catch {
-    error.value = 'Error al crear el evento'
+  } catch (e) {
+    // Muestra el mensaje específico del backend si existe
+    const detail = e.response?.data?.custom_amounts
+    error.value = detail
+      ? detail
+      : 'Error al crear el evento'
   }
 }
 
@@ -713,6 +762,17 @@ const handleAportar = async (espacioId, event) => {
     await fetchAhorros()
   } catch {
     error.value = 'Error al registrar el aporte'
+  }
+}
+
+const handleEliminarEvento = async (id) => {
+  try {
+    await api.delete(`/parches/${route.params.id}/eventos/${id}/`)
+    error.value = null
+    await fetchEventos()
+    await fetchBalance()
+  } catch {
+    error.value = 'Error al eliminar el evento'
   }
 }
 </script>
