@@ -1,7 +1,9 @@
 <template>
-  <div class="min-h-screen bg-gray-50 flex items-center justify-center">
+  <div class="min-h-screen bg-surface flex items-center justify-center">
     <div class="bg-white p-8 rounded-2xl shadow-md w-full max-w-md">
-      <h1 class="text-3xl font-bold text-center text-indigo-600 mb-2">ParCheck</h1>
+      <div class="flex justify-center mb-2">
+        <ParCheckLogo size="lg" />
+      </div>
       <p class="text-center text-gray-500 mb-6">Gestiona tus gastos compartidos</p>
 
       <form @submit.prevent="handleLogin" class="space-y-4">
@@ -10,7 +12,7 @@
           <input
             v-model="form.username"
             placeholder="tu_usuario"
-            class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-400"
+            class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-brand-400"
           />
         </div>
         <div>
@@ -19,7 +21,7 @@
             v-model="form.password"
             type="password"
             placeholder="••••••••"
-            class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-400"
+            class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-brand-400"
           />
         </div>
 
@@ -27,7 +29,7 @@
 
         <button
           type="submit"
-          class="w-full bg-indigo-600 text-white py-2 rounded-lg hover:bg-indigo-700 transition font-medium"
+          class="w-full bg-brand-500 text-white py-2 rounded-lg hover:bg-brand-600 transition font-medium"
         >
           Ingresar
         </button>
@@ -35,13 +37,14 @@
 
       <p class="text-center text-sm text-gray-500 mt-4">
         ¿No tienes cuenta?
-        <router-link to="/register" class="text-indigo-600 hover:underline">Regístrate</router-link>
+        <router-link to="/register" class="text-brand-500 hover:underline">Regístrate</router-link>
       </p>
     </div>
   </div>
 </template>
 
 <script setup>
+import ParCheckLogo from '@/components/ParCheckLogo.vue'
 import { reactive } from 'vue'
 import { useRouter } from 'vue-router'
 

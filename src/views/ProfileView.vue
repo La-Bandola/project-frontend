@@ -1,9 +1,9 @@
 <template>
-  <div class="min-h-screen bg-gray-50" v-if="auth.user">
+  <div class="min-h-screen bg-surface" v-if="auth.user">
     <!-- Navbar -->
     <nav class="bg-white shadow-sm px-6 py-4 flex justify-between items-center">
-      <router-link to="/" class="text-indigo-600 font-medium hover:underline">← Volver</router-link>
-      <h1 class="text-xl font-bold text-indigo-600">Mi perfil</h1>
+      <router-link to="/" class="text-brand-500 font-medium hover:underline">← Volver</router-link>
+      <h1 class="text-xl font-bold"><ParCheckLogo size="sm" /></h1>
       <span></span>
     </nav>
 
@@ -11,16 +11,16 @@
 
       <!-- Avatar y nombre -->
       <div class="bg-white rounded-xl shadow-sm p-6 flex items-center gap-4">
-        <div class="w-16 h-16 rounded-full bg-indigo-100 flex items-center justify-center overflow-hidden">
+        <div class="w-16 h-16 rounded-full bg-brand-100 flex items-center justify-center overflow-hidden">
           <img v-if="auth.user.photo" :src="auth.user.photo" class="w-full h-full object-cover" />
-          <span v-else class="text-2xl text-indigo-600 font-bold">
+          <span v-else class="text-2xl text-brand-500 font-bold">
             {{ auth.user.username?.charAt(0).toUpperCase() }}
           </span>
         </div>
         <div>
           <p class="font-semibold text-gray-800 text-lg">{{ auth.user.username }}</p>
           <p class="text-sm text-gray-500">{{ auth.user.email }}</p>
-          <p class="text-sm text-indigo-600">@{{ auth.user.nickname || 'sin nickname' }}</p>
+          <p class="text-sm text-brand-500">@{{ auth.user.nickname || 'sin nickname' }}</p>
         </div>
       </div>
 
@@ -31,7 +31,7 @@
           <button
             v-if="!editando"
             @click="editando = true"
-            class="text-sm text-indigo-600 hover:underline"
+            class="text-sm text-brand-500 hover:underline"
           >
             Editar
           </button>
@@ -54,7 +54,7 @@
             <input
               v-model="form.nickname"
               placeholder="@nickname"
-              class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-400"
+              class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-brand-400"
             />
           </div>
           <div>
@@ -63,7 +63,7 @@
               v-model="form.bio"
               placeholder="Cuéntanos algo sobre ti"
               rows="3"
-              class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-400"
+              class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-brand-400"
             />
           </div>
           <div>
@@ -74,7 +74,7 @@
           <div class="flex gap-2">
             <button
               type="submit"
-              class="flex-1 bg-indigo-600 text-white py-2 rounded-lg hover:bg-indigo-700 transition font-medium"
+              class="flex-1 bg-brand-500 text-white py-2 rounded-lg hover:bg-brand-600 transition font-medium"
             >
               Guardar
             </button>
@@ -104,7 +104,7 @@
               <p class="text-xs text-gray-500">**** {{ cuenta.number.slice(-4) }}</p>
             </div>
             <div class="flex items-center gap-2">
-              <span v-if="cuenta.is_primary" class="text-xs bg-indigo-100 text-indigo-700 px-2 py-1 rounded-full">
+              <span v-if="cuenta.is_primary" class="text-xs bg-brand-100 text-brand-700 px-2 py-1 rounded-full">
                 Principal
               </span>
               <button
@@ -125,7 +125,7 @@
           <select
             v-model="cuentaForm.bank"
             required
-            class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-400"
+            class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-brand-400"
           >
             <option value="">Selecciona un banco</option>
             <option value="nequi">Nequi</option>
@@ -137,7 +137,7 @@
             v-model="cuentaForm.number"
             placeholder="Número o llave"
             required
-            class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-400"
+            class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-brand-400"
           />
           <label class="flex items-center gap-2 text-sm text-gray-600">
             <input type="checkbox" v-model="cuentaForm.is_primary" />
@@ -145,7 +145,7 @@
           </label>
           <button
             type="submit"
-            class="w-full bg-green-600 text-white py-2 rounded-lg hover:bg-green-700 transition font-medium"
+            class="w-full bg-gold-500 text-white py-2 rounded-lg hover:bg-gold-600 transition font-medium"
           >
             Agregar cuenta
           </button>
@@ -161,7 +161,7 @@
           <select
             v-model="feedbackForm.type"
             required
-            class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-400"
+            class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-brand-400"
           >
             <option value="opinion">💭 Opinión</option>
             <option value="sugerencia">💡 Sugerencia</option>
@@ -172,11 +172,11 @@
             placeholder="Escribe tu mensaje..."
             rows="3"
             required
-            class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-400 resize-none"
+            class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-brand-400 resize-none"
           />
           <button
             type="submit"
-            class="w-full bg-indigo-600 text-white py-2 rounded-lg hover:bg-indigo-700 transition font-medium"
+            class="w-full bg-brand-500 text-white py-2 rounded-lg hover:bg-brand-600 transition font-medium"
           >
             Enviar
           </button>
@@ -197,7 +197,7 @@
                   class="text-xs px-2 py-0.5 rounded-full font-medium"
                   :class="{
                     'bg-yellow-100 text-yellow-700': fb.status === 'pendiente',
-                    'bg-blue-100 text-blue-700':     fb.status === 'revisado',
+                    'bg-brand-100 text-brand-700':   fb.status === 'revisado',
                     'bg-green-100 text-green-700':   fb.status === 'resuelto',
                   }"
                 >
@@ -223,6 +223,7 @@
 </template>
 
 <script setup>
+import ParCheckLogo from '@/components/ParCheckLogo.vue'
 import { ref, reactive, onMounted } from 'vue'
 import { useAuthStore } from '@/stores/auth.js'
 import api from '@/services/api.js'
