@@ -9,7 +9,15 @@
 
         <!-- Boletín financiero global -->
         <div v-if="boletin" class="bg-white rounded-xl shadow-sm p-5">
-          <h2 class="text-lg font-semibold text-gray-800 mb-4">📊 Mi resumen financiero</h2>
+          <div class="flex justify-between items-center mb-4">
+            <h2 class="text-lg font-semibold text-gray-800">📊 Mi resumen financiero</h2>
+            <router-link
+              to="/historial"
+              class="text-xs bg-gray-100 text-gray-600 px-3 py-1.5 rounded-lg hover:bg-gray-200 transition font-medium"
+            >
+              Ver historial de pagos ↗
+            </router-link>
+          </div>
           <div class="grid grid-cols-3 gap-3">
             <div class="bg-green-50 rounded-lg p-3 text-center">
               <p class="text-xs text-gray-500 mb-1">Total pagado</p>
