@@ -1,10 +1,10 @@
 <template>
   <div class="min-h-screen bg-surface" v-if="auth.user">
-    <!-- Navbar -->
-    <nav class="bg-white shadow-sm px-6 py-4 flex justify-between items-center">
-      <ParCheckLogo size="sm" to="/" />
-      <span class="text-sm text-gray-500">{{ parche?.members_count }} miembros</span>
-    </nav>
+    <AppNavbar />
+    <div class="bg-white border-b px-6 py-2 flex justify-between items-center text-sm text-gray-500">
+      <span class="font-medium text-gray-700">{{ parche?.name }}</span>
+      <span>👥 {{ parche?.members_count }} miembros</span>
+    </div>
 
     <div class="max-w-6xl mx-auto px-4 py-6 space-y-6">
 
@@ -36,6 +36,45 @@
           </div>
         </div>
       </div>
+
+      <!-- ── Participantes del parche ───────────────────────────── -->
+      <div class="bg-white rounded-xl shadow-sm p-5">
+        <h2 class="text-lg font-semibold text-gray-800 mb-4">👥 Participantes</h2>
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+          <div
+            v-for="miembro in miembros"
+            :key="miembro.id"
+            class="flex items-center gap-3 bg-gray-50 rounded-lg px-4 py-3"
+          >
+            <!-- Avatar -->
+            <div class="w-10 h-10 rounded-full bg-brand-100 flex items-center justify-center overflow-hidden shrink-0">
+              <img v-if="miembro.photo" :src="miembro.photo" class="w-full h-full object-cover" />
+              <span v-else class="text-sm font-bold text-brand-600">
+                {{ miembro.username?.charAt(0).toUpperCase() }}
+              </span>
+            </div>
+            <!-- Info -->
+            <div class="flex-1 min-w-0">
+              <p class="text-sm font-semibold text-gray-800 truncate">
+                {{ miembro.username }}
+                <span v-if="miembro.id === auth.user?.id" class="text-xs text-brand-500 font-normal ml-1">(tú)</span>
+              </p>
+              <p v-if="miembro.nickname" class="text-xs text-gray-400 truncate">@{{ miembro.nickname }}</p>
+              <!-- Cuenta bancaria principal -->
+              <div v-if="miembro.cuenta_principal" class="flex items-center gap-1 mt-1">
+                <span class="text-xs bg-gold-100 text-gold-700 px-2 py-0.5 rounded-full capitalize font-medium">
+                  {{ miembro.cuenta_principal.bank }}
+                </span>
+                <span class="text-xs text-gray-500 font-mono truncate">
+                  {{ miembro.cuenta_principal.number }}
+                </span>
+              </div>
+              <p v-else class="text-xs text-gray-400 mt-1 italic">Sin cuenta registrada</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
 
       <!-- ── Layout 2 columnas: Eventos | Suscripciones ─────────── -->
       <div class="grid grid-cols-1 lg:grid-cols-5 gap-6 items-start">
@@ -539,7 +578,7 @@
 </template>
 
 <script setup>
-import ParCheckLogo from '@/components/ParCheckLogo.vue'
+import AppNavbar from '@/components/AppNavbar.vue'
 import { ref, reactive, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 import { useParchesStore } from '@/stores/parches.js'

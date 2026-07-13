@@ -1,20 +1,6 @@
 <template>
   <div class="min-h-screen bg-surface">
-    <!-- Navbar -->
-    <nav class="bg-white shadow-sm px-6 py-4 flex justify-between items-center">
-      <ParCheckLogo size="sm" to="/" />
-      <div class="flex gap-4 items-center">
-        <router-link to="/perfil" class="text-sm text-gray-600 hover:text-brand-500">
-          👤 {{ auth.user?.nickname || auth.user?.username }}
-        </router-link>
-        <button
-          @click="auth.logout(); router.push('/login')"
-          class="text-sm text-red-500 hover:underline"
-        >
-          Cerrar sesión
-        </button>
-      </div>
-    </nav>
+    <AppNavbar />
 
     <div class="max-w-5xl mx-auto px-4 py-8 space-y-8">
 
@@ -185,7 +171,7 @@
 </template>
 
 <script setup>
-import ParCheckLogo from '@/components/ParCheckLogo.vue'
+import AppNavbar from '@/components/AppNavbar.vue'
 import { reactive, ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth.js'
