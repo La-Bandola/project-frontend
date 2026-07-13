@@ -25,6 +25,11 @@ const routes = [
     component: () => import('@/views/ParcheView.vue'),
   },
   {
+    path:      '/historial',
+    name:      'historial-global',
+    component: () => import('@/views/GlobalHistoryView.vue'),
+  },
+  {
     path:      '/perfil',
     name:      'perfil',
     component: () => import('@/views/ProfileView.vue'),

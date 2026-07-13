@@ -1,20 +1,6 @@
 <template>
   <div class="min-h-screen bg-surface">
-    <!-- Navbar -->
-    <nav class="bg-white shadow-sm px-6 py-4 flex justify-between items-center">
-      <ParCheckLogo size="sm" to="/" />
-      <div class="flex gap-4 items-center">
-        <router-link to="/perfil" class="text-sm text-gray-600 hover:text-brand-500">
-          👤 {{ auth.user?.nickname || auth.user?.username }}
-        </router-link>
-        <button
-          @click="auth.logout(); router.push('/login')"
-          class="text-sm text-red-500 hover:underline"
-        >
-          Cerrar sesión
-        </button>
-      </div>
-    </nav>
+    <AppNavbar />
 
     <div class="max-w-5xl mx-auto px-4 py-8 space-y-8">
 
@@ -23,7 +9,15 @@
 
         <!-- Boletín financiero global -->
         <div v-if="boletin" class="bg-white rounded-xl shadow-sm p-5">
-          <h2 class="text-lg font-semibold text-gray-800 mb-4">📊 Mi resumen financiero</h2>
+          <div class="flex justify-between items-center mb-4">
+            <h2 class="text-lg font-semibold text-gray-800">📊 Mi resumen financiero</h2>
+            <router-link
+              to="/historial"
+              class="text-xs bg-gray-100 text-gray-600 px-3 py-1.5 rounded-lg hover:bg-gray-200 transition font-medium"
+            >
+              Ver historial de pagos ↗
+            </router-link>
+          </div>
           <div class="grid grid-cols-3 gap-3">
             <div class="bg-green-50 rounded-lg p-3 text-center">
               <p class="text-xs text-gray-500 mb-1">Total pagado</p>
@@ -185,7 +179,7 @@
 </template>
 
 <script setup>
-import ParCheckLogo from '@/components/ParCheckLogo.vue'
+import AppNavbar from '@/components/AppNavbar.vue'
 import { reactive, ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth.js'
