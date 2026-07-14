@@ -215,18 +215,26 @@
               >
                 <div>
                   <p class="text-sm font-medium text-gray-700">{{ p.user?.username }}</p>
-                  <p class="text-xs text-gray-500">${{ p.amount_owed }}</p>
+                  <p class="text-xs text-gray-500">
+                    Debe: ${{ Number(p.amount_owed).toLocaleString('es-CO') }}
+                    <span v-if="p.amount_paid > 0 && !p.paid" class="text-brand-500 font-medium ml-1 block mt-0.5">
+                      (Abonado: ${{ Number(p.amount_paid).toLocaleString('es-CO') }})
+                    </span>
+                  </p>
                 </div>
                 <div>
                   <span v-if="p.paid" class="text-green-500 text-sm font-medium">✅ Pagado</span>
                   <button
                     v-else-if="p.user && auth.user && p.user.id === auth.user.id"
-                    @click="handlePagar(p.id)"
-                    class="text-xs bg-green-600 text-white px-3 py-1 rounded-full hover:bg-green-700 transition"
+                    @click="openPaymentModal(p, evento)"
+                    class="text-xs text-white px-3 py-1 rounded-full transition"
+                    :class="p.amount_paid > 0 ? 'bg-brand-500 hover:bg-brand-600' : 'bg-green-600 hover:bg-green-700'"
                   >
-                    Marcar pagado
+                    {{ p.amount_paid > 0 ? 'Completar' : 'Pagar' }}
                   </button>
-                  <span v-else class="text-red-400 text-sm">❌ Pendiente</span>
+                  <span v-else class="text-sm font-medium" :class="p.amount_paid > 0 ? 'text-brand-500' : 'text-red-400'">
+                    {{ p.amount_paid > 0 ? '⏳ Parcial' : '❌ Pendiente' }}
+                  </span>
                 </div>
               </div>
             </div>
@@ -584,6 +592,13 @@
         </p>
       </div>
 
+      <PaymentModal
+        :isOpen="isPaymentModalOpen"
+        :participant="selectedParticipant"
+        @close="isPaymentModalOpen = false"
+        @payment-success="onPaymentSuccess"
+      />
+
     </div>
   </div>
 
@@ -594,7 +609,8 @@
 
 <script setup>
 import AppNavbar from '@/components/AppNavbar.vue'
-import { ref, reactive, onMounted } from 'vue'
+import PaymentModal from '@/components/PaymentModal.vue'
+import { ref, onMounted, computed, reactive, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { useParchesStore } from '@/stores/parches.js'
 import { useAuthStore } from '@/stores/auth.js'
@@ -655,6 +671,17 @@ onMounted(async () => {
   await auth.fetchProfile()
   parche.value = await parches.fetchParche(route.params.id)
 
+  // Carga inicial de miembros desde el parche (rápido, sin llamada extra)
+  if (parche.value?.memberships) {
+    miembros.value = parche.value.memberships.map(m => ({
+      id: m.user.id,
+      username: m.user.username,
+      nickname: m.user.nickname,
+      photo: m.user.photo,
+      cuenta_principal: null
+    }))
+  }
+
   await fetchEventos()
   await fetchBalance()
   await fetchMiembros()
@@ -686,7 +713,17 @@ const fetchMiembros = async () => {
     const { data } = await api.get(`/parches/${route.params.id}/members/`)
     miembros.value = data
   } catch (e) {
-    console.error('error cargando miembros:', e.response?.data)
+    // Fallback: usar memberships ya cargados del parche
+    console.warn('[fetchMiembros] Fallback a memberships del parche:', e.response?.status)
+    if (parche.value?.memberships) {
+      miembros.value = parche.value.memberships.map(m => ({
+        id: m.user.id,
+        username: m.user.username,
+        nickname: m.user.nickname,
+        photo: m.user.photo,
+        cuenta_principal: null
+      }))
+    }
   }
 }
 
@@ -806,19 +843,25 @@ const handleCrearEvento = async () => {
     error.value = detail ? detail : 'Error al crear el evento'
   }
 }
+const isPaymentModalOpen = ref(false)
+const selectedParticipant = ref(null)
 
-const handlePagar = async (participanteId) => {
-  try {
-    await api.patch(`/participantes/${participanteId}/pagar/`, {})
-    await fetchEventos()
-    await fetchBalance()
-    await fetchTransacciones()
-    await fetchBalanceMutuo()
-  } catch {
-    error.value = 'Error al marcar el pago'
+const openPaymentModal = (participant, evento) => {
+  console.log('openPaymentModal called with:', { participant, evento })
+  const safeEvento = {
+    name: evento.name,
+    responsible: evento.responsible
   }
+  selectedParticipant.value = { ...participant, evento: safeEvento }
+  isPaymentModalOpen.value = true
 }
 
+const onPaymentSuccess = async () => {
+  await fetchEventos()
+  await fetchBalance()
+  await fetchTransacciones()
+  await fetchBalanceMutuo()
+}
 const fetchAhorros = async () => {
   try {
     const { data } = await api.get(`/parches/${route.params.id}/ahorros/`)
