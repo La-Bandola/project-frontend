@@ -3,7 +3,16 @@
     <AppNavbar />
     <div class="bg-white border-b px-6 py-2 flex justify-between items-center text-sm text-gray-500">
       <span class="font-medium text-gray-700">{{ parche?.name }}</span>
-      <span>👥 {{ parche?.members_count }} miembros</span>
+      <div class="flex items-center gap-4">
+        <span>👥 {{ parche?.members_count }} miembros</span>
+        <button 
+          v-if="isCreator" 
+          @click="eliminarParche"
+          class="text-xs text-red-500 hover:text-red-700 bg-red-50 hover:bg-red-100 px-3 py-1 rounded-full transition"
+        >
+          🗑️ Eliminar parche
+        </button>
+      </div>
     </div>
 
     <div class="max-w-6xl mx-auto px-4 py-6 space-y-6">
@@ -187,7 +196,8 @@
           <div
             v-for="(evento, i) in eventos"
             :key="i"
-            class="bg-white rounded-xl shadow-sm p-5"
+            :id="'evento-' + evento.id"
+            class="bg-white rounded-xl shadow-sm p-5 transition-all duration-1000"
           >
             <div class="flex justify-between items-start mb-3">
               <div>
@@ -199,6 +209,7 @@
                   {{ evento.participants?.length }} participantes
                 </span>
                 <button
+                  v-if="isCreator"
                   @click="handleEliminarEvento(evento.id)"
                   class="text-xs text-red-400 hover:text-red-600 hover:underline transition"
                 >
@@ -215,18 +226,26 @@
               >
                 <div>
                   <p class="text-sm font-medium text-gray-700">{{ p.user?.username }}</p>
-                  <p class="text-xs text-gray-500">${{ p.amount_owed }}</p>
+                  <p class="text-xs text-gray-500">
+                    Debe: ${{ Number(p.amount_owed).toLocaleString('es-CO') }}
+                    <span v-if="p.amount_paid > 0 && !p.paid" class="text-brand-500 font-medium ml-1 block mt-0.5">
+                      (Abonado: ${{ Number(p.amount_paid).toLocaleString('es-CO') }})
+                    </span>
+                  </p>
                 </div>
                 <div>
                   <span v-if="p.paid" class="text-green-500 text-sm font-medium">✅ Pagado</span>
                   <button
                     v-else-if="p.user && auth.user && p.user.id === auth.user.id"
-                    @click="handlePagar(p.id)"
-                    class="text-xs bg-green-600 text-white px-3 py-1 rounded-full hover:bg-green-700 transition"
+                    @click="openPaymentModal(p, evento)"
+                    class="text-xs text-white px-3 py-1 rounded-full transition"
+                    :class="p.amount_paid > 0 ? 'bg-brand-500 hover:bg-brand-600' : 'bg-green-600 hover:bg-green-700'"
                   >
-                    Marcar pagado
+                    {{ p.amount_paid > 0 ? 'Completar' : 'Pagar' }}
                   </button>
-                  <span v-else class="text-red-400 text-sm">❌ Pendiente</span>
+                  <span v-else class="text-sm font-medium" :class="p.amount_paid > 0 ? 'text-brand-500' : 'text-red-400'">
+                    {{ p.amount_paid > 0 ? '⏳ Parcial' : '❌ Pendiente' }}
+                  </span>
                 </div>
               </div>
             </div>
@@ -295,26 +314,30 @@
           </div>
 
           <!-- Lista de suscripciones -->
-          <div
-            v-for="sus in suscripciones"
-            :key="sus.id"
-            class="bg-white rounded-xl shadow-sm p-4 flex justify-between items-start"
-          >
-            <div>
-              <p class="font-semibold text-gray-800">{{ sus.name }}</p>
-              <p class="text-sm text-gray-500">
-                ${{ sus.amount }} · Corte: {{ formatFecha(sus.cutoff_date) }}
-              </p>
-              <p class="text-xs text-gray-400 mt-1">
-                Responsable: {{ sus.responsible?.username || '—' }}
-              </p>
-            </div>
-            <button
-              @click="handleEliminarSuscripcion(sus.id)"
-              class="text-xs text-red-400 hover:text-red-600 hover:underline transition ml-2"
+          <div class="space-y-3">
+            <div
+              v-for="sus in suscripciones"
+              :key="sus.id"
+              :id="'suscripcion-' + sus.id"
+              class="bg-white rounded-xl shadow-sm p-4 flex justify-between items-start transition-all duration-1000"
             >
-              Eliminar
-            </button>
+              <div>
+                <p class="font-semibold text-gray-800">{{ sus.name }}</p>
+                <p class="text-sm text-gray-500">
+                  ${{ sus.amount }} · Corte: {{ formatFecha(sus.cutoff_date) }}
+                </p>
+                <p class="text-xs text-gray-400 mt-1">
+                  Responsable: {{ sus.responsible?.username || '—' }}
+                </p>
+              </div>
+              <button
+                v-if="isCreator"
+                @click="handleEliminarSuscripcion(sus.id)"
+                class="text-xs text-red-400 hover:text-red-600 hover:underline transition ml-2"
+              >
+                Eliminar
+              </button>
+            </div>
           </div>
 
           <p v-if="suscripciones.length === 0" class="text-gray-400 text-sm text-center bg-white rounded-xl py-6">
@@ -358,7 +381,8 @@
                 <div
                   v-for="tx in transacciones"
                   :key="tx.id"
-                  class="flex justify-between items-start bg-gray-50 rounded-lg px-4 py-3"
+                  :id="'transaccion-' + tx.id"
+                  class="flex justify-between items-start bg-gray-50 rounded-lg px-4 py-3 transition-all duration-1000"
                 >
                   <div>
                     <p class="text-sm font-medium text-gray-800">
@@ -492,7 +516,8 @@
           <div
             v-for="espacio in ahorros"
             :key="espacio.id"
-            class="bg-white rounded-xl shadow-sm p-5"
+            :id="'ahorro-' + espacio.id"
+            class="bg-white rounded-xl shadow-sm p-5 transition-all duration-1000"
           >
             <!-- Cabecera -->
             <div class="flex justify-between items-start mb-3">
@@ -503,8 +528,9 @@
                 </p>
               </div>
               <button
+                v-if="isCreator"
                 @click="handleEliminarAhorro(espacio.id)"
-                class="text-xs text-red-400 hover:text-red-600 hover:underline transition ml-4 shrink-0"
+                class="text-xs text-red-400 hover:text-red-600 hover:underline transition ml-3"
               >
                 Eliminar
               </button>
@@ -584,6 +610,13 @@
         </p>
       </div>
 
+      <PaymentModal
+        :isOpen="isPaymentModalOpen"
+        :participant="selectedParticipant"
+        @close="isPaymentModalOpen = false"
+        @payment-success="onPaymentSuccess"
+      />
+
     </div>
   </div>
 
@@ -594,15 +627,20 @@
 
 <script setup>
 import AppNavbar from '@/components/AppNavbar.vue'
-import { ref, reactive, onMounted } from 'vue'
-import { useRoute } from 'vue-router'
+import PaymentModal from '@/components/PaymentModal.vue'
+import { ref, onMounted, computed, reactive, watch } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import { useParchesStore } from '@/stores/parches.js'
 import { useAuthStore } from '@/stores/auth.js'
 import api from '@/services/api.js'
 
 const route   = useRoute()
+const router  = useRouter()
 const parches = useParchesStore()
 const auth    = useAuthStore()
+
+const isCreator = computed(() => parche.value?.creator?.id === auth.user?.id)
+
 const parche         = ref(null)
 const eventos        = ref([])
 const miembros       = ref([])
@@ -655,6 +693,17 @@ onMounted(async () => {
   await auth.fetchProfile()
   parche.value = await parches.fetchParche(route.params.id)
 
+  // Carga inicial de miembros desde el parche (rápido, sin llamada extra)
+  if (parche.value?.memberships) {
+    miembros.value = parche.value.memberships.map(m => ({
+      id: m.user.id,
+      username: m.user.username,
+      nickname: m.user.nickname,
+      photo: m.user.photo,
+      cuenta_principal: null
+    }))
+  }
+
   await fetchEventos()
   await fetchBalance()
   await fetchMiembros()
@@ -686,7 +735,17 @@ const fetchMiembros = async () => {
     const { data } = await api.get(`/parches/${route.params.id}/members/`)
     miembros.value = data
   } catch (e) {
-    console.error('error cargando miembros:', e.response?.data)
+    // Fallback: usar memberships ya cargados del parche
+    console.warn('[fetchMiembros] Fallback a memberships del parche:', e.response?.status)
+    if (parche.value?.memberships) {
+      miembros.value = parche.value.memberships.map(m => ({
+        id: m.user.id,
+        username: m.user.username,
+        nickname: m.user.nickname,
+        photo: m.user.photo,
+        cuenta_principal: null
+      }))
+    }
   }
 }
 
@@ -806,19 +865,25 @@ const handleCrearEvento = async () => {
     error.value = detail ? detail : 'Error al crear el evento'
   }
 }
+const isPaymentModalOpen = ref(false)
+const selectedParticipant = ref(null)
 
-const handlePagar = async (participanteId) => {
-  try {
-    await api.patch(`/participantes/${participanteId}/pagar/`, {})
-    await fetchEventos()
-    await fetchBalance()
-    await fetchTransacciones()
-    await fetchBalanceMutuo()
-  } catch {
-    error.value = 'Error al marcar el pago'
+const openPaymentModal = (participant, evento) => {
+  console.log('openPaymentModal called with:', { participant, evento })
+  const safeEvento = {
+    name: evento.name,
+    responsible: evento.responsible
   }
+  selectedParticipant.value = { ...participant, evento: safeEvento }
+  isPaymentModalOpen.value = true
 }
 
+const onPaymentSuccess = async () => {
+  await fetchEventos()
+  await fetchBalance()
+  await fetchTransacciones()
+  await fetchBalanceMutuo()
+}
 const fetchAhorros = async () => {
   try {
     const { data } = await api.get(`/parches/${route.params.id}/ahorros/`)
@@ -900,4 +965,62 @@ async function copiarCodigo() {
     console.error('Error al copiar el código:', err)
   }
 }
+
+const eliminarParche = async () => {
+  if (confirm(`¿Estás seguro de que quieres eliminar el parche "${parche.value.name}"? Esta acción es irreversible y eliminará todos los eventos, deudas y ahorros.`)) {
+    try {
+      await api.delete(`/parches/${route.params.id}/`)
+      router.push('/')
+    } catch (e) {
+      alert('Hubo un error al eliminar el parche. Solo el creador puede eliminarlo.')
+    }
+  }
+}
+
+const checkHighlight = () => {
+  const type = route.query.highlight
+  const id = route.query.id
+  if (type && id) {
+    setTimeout(() => {
+      const el = document.getElementById(`${type}-${id}`)
+      if (el) {
+        el.scrollIntoView({ behavior: 'smooth', block: 'center' })
+        el.classList.add('ring-4', 'ring-brand-500', 'bg-brand-50')
+        setTimeout(() => {
+          el.classList.remove('ring-4', 'ring-brand-500', 'bg-brand-50')
+        }, 3000)
+      }
+    }, 500)
+  }
+}
+
+watch(() => route.query, () => {
+  checkHighlight()
+})
+
+onMounted(async () => {
+  await auth.fetchProfile()
+  parche.value = await parches.fetchParche(route.params.id)
+
+  if (parche.value?.memberships) {
+    miembros.value = parche.value.memberships.map(m => ({
+      id: m.user.id,
+      username: m.user.username,
+      nickname: m.user.nickname,
+      photo: m.user.photo,
+      cuenta_principal: m.user.cuentas_bancarias?.find(c => c.is_primary) || m.user.cuentas_bancarias?.[0]
+    }))
+  }
+
+  await Promise.all([
+    fetchEventos(),
+    fetchBalance(),
+    fetchSuscripciones(),
+    fetchAhorros(),
+    fetchTransacciones(),
+    fetchBalanceMutuo()
+  ])
+  
+  checkHighlight()
+})
 </script>

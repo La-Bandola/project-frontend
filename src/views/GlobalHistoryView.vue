@@ -61,6 +61,9 @@
                     {{ tx.concept }} <span class="mx-1">•</span>
                     <span class="text-brand-600 font-medium">{{ tx.parche_name }}</span>
                   </p>
+                  <p v-if="tx.destination_account" class="text-xs text-gray-400 mt-0.5">
+                    🏦 {{ tx.destination_account }}
+                  </p>
                 </div>
               </div>
 

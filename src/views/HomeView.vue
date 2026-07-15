@@ -80,7 +80,7 @@
                   </p>
                 </div>
                 <span class="text-red-500 font-semibold text-sm whitespace-nowrap ml-4">
-                  ${{ Number(deuda.monto_adeudado).toLocaleString('es-CO') }}
+                  ${{ Number(deuda.monto_restante).toLocaleString('es-CO') }}
                 </span>
               </div>
             </router-link>
@@ -203,7 +203,7 @@ const toggleUnirse = () => { mostrarUnirse.value = !mostrarUnirse.value; mostrar
 
 // Suma total de todas las deudas pendientes
 const totalDeudas = computed(() =>
-  deudas.value.reduce((acc, d) => acc + Number(d.monto_adeudado), 0)
+  deudas.value.reduce((acc, d) => acc + Number(d.monto_restante), 0)
 )
 
 onMounted(async () => {
