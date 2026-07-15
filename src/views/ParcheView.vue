@@ -628,11 +628,13 @@
 <script setup>
 import AppNavbar from '@/components/AppNavbar.vue'
 import PaymentModal from '@/components/PaymentModal.vue'
-import { ref, onMounted, computed, reactive, watch } from 'vue'
+import { computed, onMounted, reactive, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { useParchesStore } from '@/stores/parches.js'
-import { useAuthStore } from '@/stores/auth.js'
+
 import api from '@/services/api.js'
+import { useAuthStore } from '@/stores/auth.js'
+import { useParchesStore } from '@/stores/parches.js'
+import { buildEventPayload, formatCurrency, formatDate } from '@/utils/parcheFormatting.js'
 
 const route   = useRoute()
 const router  = useRouter()
@@ -797,16 +799,9 @@ const handleCrearTransaccion = async () => {
   }
 }
 
-const formatFecha = (fecha) => {
-  if (!fecha) return '—'
-  const [y, m, d] = fecha.split('-')
-  return `${d}/${m}/${y}`
-}
+const formatFecha = (fecha) => formatDate(fecha)
 
-const formatMoneda = (valor) => {
-  if (valor === null || valor === undefined) return '0'
-  return Number(valor).toLocaleString('es-CO')
-}
+const formatMoneda = (valor) => formatCurrency(valor)
 
 const handleCrearSuscripcion = async () => {
   try {
@@ -840,19 +835,15 @@ const handleEliminarSuscripcion = async (id) => {
 
 const handleCrearEvento = async () => {
   try {
-    const payload = {
-      name:            eventoForm.name,
-      total_amount:    eventoForm.total_amount,
-      split_type:      eventoForm.split_type,
-      responsible_id:  eventoForm.responsible_id || null,
-      participant_ids: eventoForm.participant_ids.length > 0
-                       ? eventoForm.participant_ids
-                       : [auth.user.id],
-    }
-
-    if (eventoForm.split_type === 'custom') {
-      payload.custom_amounts = eventoForm.custom_amounts
-    }
+    const payload = buildEventPayload({
+      name: eventoForm.name,
+      totalAmount: eventoForm.total_amount,
+      splitType: eventoForm.split_type,
+      responsibleId: eventoForm.responsible_id,
+      participantIds: eventoForm.participant_ids,
+      customAmounts: eventoForm.custom_amounts,
+      currentUserId: auth.user?.id,
+    })
 
     await api.post(`/parches/${route.params.id}/eventos/`, payload)
 
