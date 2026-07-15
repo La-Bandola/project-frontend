@@ -7,7 +7,7 @@
         <span>👥 {{ parche?.members_count }} miembros</span>
         <button 
           v-if="isCreator" 
-          @click="eliminarParche"
+          @click="mostrarModalEliminarParche = true"
           class="text-xs text-red-500 hover:text-red-700 bg-red-50 hover:bg-red-100 px-3 py-1 rounded-full transition"
         >
           🗑️ Eliminar parche
@@ -610,6 +610,36 @@
         </p>
       </div>
 
+      <!-- Modal Eliminar Parche -->
+      <div v-if="mostrarModalEliminarParche" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-900/50 backdrop-blur-sm">
+        <div class="bg-white rounded-2xl shadow-xl w-full max-w-sm overflow-hidden">
+          <div class="p-6 text-center">
+            <div class="w-16 h-16 bg-red-100 text-red-500 rounded-full flex items-center justify-center mx-auto mb-4 text-3xl">
+              ⚠️
+            </div>
+            <h3 class="text-xl font-bold text-gray-800 mb-2">Eliminar Parche</h3>
+            <p class="text-sm text-gray-500 mb-6">
+              ¿Estás seguro de que quieres eliminar el parche <strong>"{{ parche?.name }}"</strong>?<br/><br/>
+              Esta acción es irreversible y eliminará todos los eventos, deudas y ahorros de todos los miembros.
+            </p>
+            <div class="flex gap-3">
+              <button 
+                @click="mostrarModalEliminarParche = false"
+                class="flex-1 py-2.5 px-4 bg-gray-100 text-gray-700 rounded-xl font-medium hover:bg-gray-200 transition"
+              >
+                Cancelar
+              </button>
+              <button 
+                @click="eliminarParcheConfirmado"
+                class="flex-1 py-2.5 px-4 bg-red-500 text-white rounded-xl font-medium hover:bg-red-600 transition"
+              >
+                Eliminar
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <PaymentModal
         :isOpen="isPaymentModalOpen"
         :participant="selectedParticipant"
@@ -653,6 +683,7 @@ const ahorros        = ref([])
 const error          = ref(null)
 const balance        = ref({ pagado: 0, recibido: 0, deudas: 0, neto: 0 })
 const copiado        = ref(false)
+const mostrarModalEliminarParche = ref(false)
 
 
 // Toggles para formularios colapsables
@@ -962,14 +993,14 @@ async function copiarCodigo() {
   }
 }
 
-const eliminarParche = async () => {
-  if (confirm(`¿Estás seguro de que quieres eliminar el parche "${parche.value.name}"? Esta acción es irreversible y eliminará todos los eventos, deudas y ahorros.`)) {
-    try {
-      await api.delete(`/parches/${route.params.id}/`)
-      router.push('/')
-    } catch (e) {
-      alert('Hubo un error al eliminar el parche. Solo el creador puede eliminarlo.')
-    }
+const eliminarParcheConfirmado = async () => {
+  try {
+    await api.delete(`/parches/${route.params.id}/`)
+    mostrarModalEliminarParche.value = false
+    router.push('/')
+  } catch (e) {
+    mostrarModalEliminarParche.value = false
+    alert('Hubo un error al eliminar el parche. Solo el creador puede eliminarlo.')
   }
 }
 
