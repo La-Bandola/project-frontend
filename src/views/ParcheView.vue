@@ -722,29 +722,6 @@ const ahorroForm = reactive({
   target_date: '',
 })
 
-onMounted(async () => {
-  await auth.fetchProfile()
-  parche.value = await parches.fetchParche(route.params.id)
-
-  // Carga inicial de miembros desde el parche (rápido, sin llamada extra)
-  if (parche.value?.memberships) {
-    miembros.value = parche.value.memberships.map(m => ({
-      id: m.user.id,
-      username: m.user.username,
-      nickname: m.user.nickname,
-      photo: m.user.photo,
-      cuenta_principal: null
-    }))
-  }
-
-  await fetchEventos()
-  await fetchBalance()
-  await fetchMiembros()
-  await fetchSuscripciones()
-  await fetchTransacciones()
-  await fetchBalanceMutuo()
-  await fetchAhorros()
-})
 
 const fetchEventos = async () => {
   try {
@@ -825,6 +802,7 @@ const handleCrearTransaccion = async () => {
     await fetchTransacciones()
     await fetchBalanceMutuo()
     await fetchBalance()
+    await fetchEventos()  // Actualizar amount_paid en eventos tras el pago manual
   } catch {
     error.value = 'Error al registrar el pago'
   }
