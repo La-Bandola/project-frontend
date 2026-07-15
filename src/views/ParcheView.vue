@@ -44,19 +44,19 @@
         <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
           <div class="bg-green-50 rounded-lg p-3 text-center">
             <p class="text-xs text-gray-500 mb-1">Pagado</p>
-            <p class="text-lg font-bold text-green-600">${{ balance.pagado }}</p>
+            <p class="text-lg font-bold text-green-600">${{ formatMoneda(balance.pagado) }}</p>
           </div>
           <div class="bg-blue-50 rounded-lg p-3 text-center">
             <p class="text-xs text-gray-500 mb-1">Recibido</p>
-            <p class="text-lg font-bold text-blue-600">${{ balance.recibido }}</p>
+            <p class="text-lg font-bold text-blue-600">${{ formatMoneda(balance.recibido) }}</p>
           </div>
           <div class="bg-red-50 rounded-lg p-3 text-center">
             <p class="text-xs text-gray-500 mb-1">Deudas</p>
-            <p class="text-lg font-bold text-red-500">${{ balance.deudas }}</p>
+            <p class="text-lg font-bold text-red-500">${{ formatMoneda(balance.deudas) }}</p>
           </div>
           <div class="bg-gray-50 rounded-lg p-3 text-center">
             <p class="text-xs text-gray-500 mb-1">Neto</p>
-            <p class="text-lg font-bold text-gray-700">${{ balance.neto }}</p>
+            <p class="text-lg font-bold text-gray-700">${{ formatMoneda(balance.neto) }}</p>
           </div>
         </div>
       </div>
@@ -202,7 +202,7 @@
             <div class="flex justify-between items-start mb-3">
               <div>
                 <p class="font-semibold text-gray-800">{{ evento.name }}</p>
-                <p class="text-sm text-gray-500">Total: ${{ evento.total_amount }}</p>
+                <p class="text-sm text-gray-500">Total: ${{ formatMoneda(evento.total_amount) }}</p>
               </div>
               <div class="flex items-center gap-2">
                 <span class="text-xs bg-brand-100 text-brand-700 px-2 py-1 rounded-full">
@@ -227,9 +227,9 @@
                 <div>
                   <p class="text-sm font-medium text-gray-700">{{ p.user?.username }}</p>
                   <p class="text-xs text-gray-500">
-                    Debe: ${{ Number(p.amount_owed).toLocaleString('es-CO') }}
+                    Debe: ${{ formatMoneda(p.amount_owed) }}
                     <span v-if="p.amount_paid > 0 && !p.paid" class="text-brand-500 font-medium ml-1 block mt-0.5">
-                      (Abonado: ${{ Number(p.amount_paid).toLocaleString('es-CO') }})
+                      (Abonado: ${{ formatMoneda(p.amount_paid) }})
                     </span>
                   </p>
                 </div>
@@ -324,7 +324,7 @@
               <div>
                 <p class="font-semibold text-gray-800">{{ sus.name }}</p>
                 <p class="text-sm text-gray-500">
-                  ${{ sus.amount }} · Corte: {{ formatFecha(sus.cutoff_date) }}
+                  ${{ formatMoneda(sus.amount) }} · Corte: {{ formatFecha(sus.cutoff_date) }}
                 </p>
                 <p class="text-xs text-gray-400 mt-1">
                   Responsable: {{ sus.responsible?.username || '—' }}
@@ -366,7 +366,7 @@
                   class="text-sm font-semibold"
                   :class="monto >= 0 ? 'text-green-600' : 'text-red-500'"
                 >
-                  {{ monto >= 0 ? '+' : '' }}${{ Number(monto).toLocaleString('es-CO') }}
+                  {{ monto >= 0 ? '+' : '' }}${{ formatMoneda(monto) }}
                 </span>
               </div>
             </div>
@@ -395,7 +395,7 @@
                     class="text-sm font-semibold whitespace-nowrap ml-4"
                     :class="tx.type === 'pago' ? 'text-green-600' : 'text-red-500'"
                   >
-                    ${{ Number(tx.amount).toLocaleString('es-CO') }}
+                    ${{ formatMoneda(tx.amount) }}
                   </span>
                 </div>
                 <p v-if="transacciones.length === 0" class="text-sm text-gray-400 text-center">
@@ -542,8 +542,8 @@
               <!-- Izquierda: progreso -->
               <div>
                 <div class="flex justify-between text-xs text-gray-500 mb-1">
-                  <span>${{ Number(espacio.current_amount).toLocaleString('es-CO') }} ahorrado</span>
-                  <span>Meta: ${{ Number(espacio.goal_amount).toLocaleString('es-CO') }}</span>
+                  <span>${{ formatMoneda(espacio.current_amount) }} ahorrado</span>
+                  <span>Meta: ${{ formatMoneda(espacio.goal_amount) }}</span>
                 </div>
                 <div class="w-full bg-gray-100 rounded-full h-2.5">
                   <div
@@ -566,7 +566,7 @@
                   >
                     <span class="text-gray-700">{{ aporte.user?.username }}</span>
                     <span class="text-green-600 font-medium">
-                      +${{ Number(aporte.amount).toLocaleString('es-CO') }}
+                      +${{ formatMoneda(aporte.amount) }}
                       <span v-if="aporte.note" class="text-gray-400 font-normal ml-1">· {{ aporte.note }}</span>
                     </span>
                   </div>
@@ -801,6 +801,11 @@ const formatFecha = (fecha) => {
   if (!fecha) return '—'
   const [y, m, d] = fecha.split('-')
   return `${d}/${m}/${y}`
+}
+
+const formatMoneda = (valor) => {
+  if (valor === null || valor === undefined) return '0'
+  return Number(valor).toLocaleString('es-CO')
 }
 
 const handleCrearSuscripcion = async () => {
